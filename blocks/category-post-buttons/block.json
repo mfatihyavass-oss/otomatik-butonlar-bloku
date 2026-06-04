@@ -1,0 +1,59 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "otobuton/category-post-buttons",
+	"version": "1.3.0",
+	"title": "Otomatik Yazı Kutuları",
+	"category": "widgets",
+	"icon": "screenoptions",
+	"description": "Seçilen kategorideki en yeni yazıları otomatik olarak kutucuklarla gösterir.",
+	"textdomain": "otomatik-butonlar-bloku",
+	"attributes": {
+		"categoryId": {
+			"type": "number",
+			"default": 0
+		},
+		"title": {
+			"type": "string",
+			"default": "Son Yazılar"
+		},
+		"titleColor": {
+			"type": "string",
+			"default": "#121715"
+		},
+		"postsPerPage": {
+			"type": "number",
+			"default": 6
+		},
+		"columns": {
+			"type": "number",
+			"default": 3
+		},
+		"rows": {
+			"type": "number",
+			"default": 2
+		},
+		"showFeaturedBackground": {
+			"type": "boolean",
+			"default": true
+		},
+		"instanceId": {
+			"type": "string",
+			"default": ""
+		}
+	},
+	"supports": {
+		"align": [
+			"wide",
+			"full"
+		],
+		"html": false,
+		"spacing": {
+			"margin": true,
+			"padding": true
+		}
+	},
+	"editorScript": "otobuton-category-post-buttons-editor",
+	"style": "otobuton-category-post-buttons-style",
+	"editorStyle": "otobuton-category-post-buttons-editor-style"
+}

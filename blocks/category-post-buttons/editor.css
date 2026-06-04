@@ -1,0 +1,63 @@
+.otobuton-category-post-buttons-editor {
+	padding: 4px 0;
+}
+
+.otobuton-category-post-buttons-editor .components-disabled {
+	border-radius: 8px;
+}
+
+.otobuton-category-post-buttons-editor .wp-block-otobuton-category-post-buttons {
+	margin-block: 0;
+}
+
+.otobuton-editor-settings {
+	display: grid;
+	gap: 12px;
+}
+
+.otobuton-editor-settings--inline {
+	margin-top: 14px;
+	padding: 14px;
+	border: 1px solid #dcdcde;
+	border-radius: 8px;
+	background: #fff;
+	box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+.otobuton-editor-settings--inline .components-base-control {
+	margin-bottom: 0;
+}
+
+.otobuton-editor-settings--inline .components-toggle-control {
+	margin-bottom: 0;
+}
+
+.otobuton-editor-settings--panel {
+	gap: 10px;
+}
+
+.otobuton-editor-color-field {
+	display: grid;
+	gap: 8px;
+}
+
+.otobuton-editor-color-field__label {
+	color: #1e1e1e;
+	font-size: 11px;
+	font-weight: 500;
+	line-height: 1.4;
+	text-transform: uppercase;
+}
+
+.otobuton-editor-color-field .components-circular-option-picker__swatches {
+	gap: 6px;
+}
+
+.otobuton-editor-loading {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 14px;
+	color: #4b5563;
+	font-size: 13px;
+}

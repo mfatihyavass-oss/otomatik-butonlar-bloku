@@ -1,0 +1,452 @@
+.wp-block-otobuton-category-post-buttons.otobuton-post-buttons {
+	margin-block: 1.5rem;
+}
+
+.otobuton-post-buttons__header {
+	display: flex;
+	justify-content: center;
+	margin-bottom: clamp(16px, 2.4vw, 24px);
+	text-align: center;
+}
+
+.otobuton-post-buttons__heading {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: min(100%, 820px);
+	min-height: 48px;
+	margin: 0;
+	padding: 0 18px 14px;
+	color: var(--otobuton-heading-color, #121715);
+	font-size: clamp(24px, 3vw, 40px);
+	font-weight: 800;
+	letter-spacing: 0;
+	line-height: 1.08;
+	text-align: center;
+	text-wrap: balance;
+	transition:
+		color 240ms ease,
+		text-shadow 240ms ease,
+		transform 240ms ease;
+}
+
+.otobuton-post-buttons__heading::before,
+.otobuton-post-buttons__heading::after {
+	position: absolute;
+	left: 50%;
+	content: "";
+	pointer-events: none;
+	transform: translateX(-50%);
+	transition:
+		opacity 240ms ease,
+		transform 240ms ease,
+		width 240ms ease;
+}
+
+.otobuton-post-buttons__heading::before {
+	bottom: 0;
+	width: min(160px, 58%);
+	height: 3px;
+	border-radius: 999px;
+	background: linear-gradient(90deg, transparent, #c8a24a 18%, #41d6b5 82%, transparent);
+}
+
+.otobuton-post-buttons__heading::after {
+	bottom: -5px;
+	width: min(92px, 36%);
+	height: 1px;
+	background: rgba(18, 23, 21, 0.28);
+}
+
+.otobuton-post-buttons__header:hover .otobuton-post-buttons__heading,
+.otobuton-post-buttons__heading:focus-visible {
+	color: var(--otobuton-heading-hover-color, #2a2211);
+	text-shadow: 0 10px 28px rgba(200, 162, 74, 0.2);
+	transform: translateY(-2px);
+}
+
+.otobuton-post-buttons__header:hover .otobuton-post-buttons__heading::before,
+.otobuton-post-buttons__heading:focus-visible::before {
+	width: min(220px, 78%);
+	background: linear-gradient(90deg, transparent, #d6ad4f 14%, #41d6b5 86%, transparent);
+}
+
+.otobuton-post-buttons__header:hover .otobuton-post-buttons__heading::after,
+.otobuton-post-buttons__heading:focus-visible::after {
+	opacity: 0.55;
+	transform: translateX(-50%) translateY(3px);
+}
+
+.otobuton-post-buttons__grid {
+	display: grid;
+	gap: clamp(10px, 1.7vw, 16px);
+	padding: 0;
+	margin: 0;
+	list-style: none;
+}
+
+.otobuton-post-buttons__grid--columns-1 {
+	grid-template-columns: minmax(0, 1fr);
+}
+
+.otobuton-post-buttons__grid--columns-2 {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.otobuton-post-buttons__grid--columns-3 {
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.otobuton-post-buttons__grid--columns-4 {
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.otobuton-post-buttons__grid--columns-5 {
+	grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.otobuton-post-buttons__grid--columns-6 {
+	grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.otobuton-post-buttons__item {
+	display: flex;
+	min-width: 0;
+	margin: 0;
+	padding: 0;
+}
+
+.otobuton-post-button {
+	position: relative;
+	isolation: isolate;
+	display: flex;
+	width: 100%;
+	min-height: clamp(116px, 12vw, 154px);
+	align-items: flex-end;
+	overflow: hidden;
+	padding: clamp(14px, 2vw, 20px);
+	border: 1px solid rgba(255, 255, 255, 0.14);
+	border-radius: 8px;
+	background:
+		radial-gradient(circle at 85% 18%, rgba(245, 183, 72, 0.24), transparent 34%),
+		radial-gradient(circle at 8% 85%, rgba(65, 214, 181, 0.18), transparent 36%),
+		linear-gradient(135deg, #161818 0%, #222824 48%, #121715 100%);
+	box-shadow: 0 16px 34px rgba(0, 0, 0, 0.18);
+	color: #fff;
+	text-decoration: none;
+	transform: translateY(0);
+	transition:
+		transform 240ms ease,
+		box-shadow 240ms ease,
+		border-color 240ms ease,
+		background-color 240ms ease;
+}
+
+.otobuton-post-button:visited,
+.otobuton-post-button:hover,
+.otobuton-post-button:focus {
+	color: #fff;
+	text-decoration: none;
+}
+
+.otobuton-post-button::before,
+.otobuton-post-button::after {
+	position: absolute;
+	inset: 0;
+	content: "";
+	pointer-events: none;
+}
+
+.otobuton-post-button::before {
+	z-index: -2;
+	background-image: var(--otobuton-bg-image);
+	background-position: center;
+	background-size: cover;
+	filter: saturate(0.62) contrast(0.9) brightness(0.72);
+	opacity: 0;
+	transform: scale(1.03);
+	transition:
+		opacity 280ms ease,
+		transform 420ms ease,
+		filter 280ms ease;
+}
+
+.otobuton-post-button.has-image-bg::before {
+	opacity: 0.46;
+}
+
+.otobuton-post-button::after {
+	z-index: -1;
+	background:
+		linear-gradient(180deg, rgba(10, 13, 12, 0.12) 0%, rgba(10, 13, 12, 0.88) 100%),
+		linear-gradient(135deg, rgba(255, 255, 255, 0.12), transparent 36%);
+}
+
+.otobuton-post-button__content {
+	position: relative;
+	z-index: 1;
+	display: grid;
+	gap: 7px;
+	min-width: 0;
+	max-width: calc(100% - 34px);
+}
+
+.otobuton-post-button__date {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	width: fit-content;
+	max-width: 100%;
+	color: rgba(255, 255, 255, 0.82);
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0;
+	line-height: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.otobuton-post-button__date::before {
+	display: block;
+	width: 14px;
+	height: 2px;
+	border-radius: 2px;
+	background: #f5b748;
+	content: "";
+	flex: 0 0 auto;
+}
+
+.otobuton-post-button__title {
+	display: -webkit-box;
+	color: #fff;
+	font-size: clamp(15px, 1.35vw, 18px);
+	font-weight: 760;
+	letter-spacing: 0;
+	line-height: 1.18;
+	overflow: hidden;
+	text-wrap: balance;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 3;
+}
+
+.otobuton-post-button__arrow {
+	position: absolute;
+	top: 12px;
+	right: 12px;
+	z-index: 1;
+	display: grid;
+	width: 32px;
+	height: 32px;
+	place-items: center;
+	border: 1px solid rgba(255, 255, 255, 0.22);
+	border-radius: 999px;
+	background: rgba(0, 0, 0, 0.18);
+	color: #fff;
+	transition:
+		background-color 220ms ease,
+		border-color 220ms ease,
+		transform 220ms ease;
+}
+
+.otobuton-post-button__arrow::before,
+.otobuton-post-button__arrow::after {
+	display: block;
+	content: "";
+	background: currentColor;
+}
+
+.otobuton-post-button__arrow::before {
+	width: 11px;
+	height: 2px;
+	transform: translateX(-1px);
+}
+
+.otobuton-post-button__arrow::after {
+	position: absolute;
+	width: 8px;
+	height: 8px;
+	border-top: 2px solid currentColor;
+	border-right: 2px solid currentColor;
+	background: transparent;
+	transform: translateX(3px) rotate(45deg);
+}
+
+.otobuton-post-button:hover,
+.otobuton-post-button:focus-visible {
+	border-color: rgba(245, 183, 72, 0.72);
+	box-shadow: 0 22px 46px rgba(0, 0, 0, 0.24);
+	transform: translateY(-4px);
+}
+
+.otobuton-post-button:hover::before,
+.otobuton-post-button:focus-visible::before {
+	filter: saturate(0.8) contrast(0.96) brightness(0.82);
+	opacity: 0.58;
+	transform: scale(1.09);
+}
+
+.otobuton-post-button:hover .otobuton-post-button__arrow,
+.otobuton-post-button:focus-visible .otobuton-post-button__arrow {
+	border-color: rgba(255, 255, 255, 0.42);
+	background: rgba(245, 183, 72, 0.82);
+	color: #171510;
+	transform: translateX(2px);
+}
+
+.otobuton-post-button:focus-visible {
+	outline: 3px solid rgba(65, 214, 181, 0.6);
+	outline-offset: 3px;
+}
+
+.otobuton-post-buttons__empty {
+	grid-column: 1 / -1;
+	margin: 0;
+	padding: 18px;
+	border: 1px dashed rgba(0, 0, 0, 0.18);
+	border-radius: 8px;
+	color: #4b5563;
+	font-size: 14px;
+}
+
+.otobuton-post-buttons__pagination {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	margin-top: clamp(14px, 2vw, 20px);
+}
+
+.otobuton-post-buttons__page-link {
+	position: relative;
+	display: grid;
+	width: 38px;
+	height: 38px;
+	place-items: center;
+	border: 1px solid rgba(18, 23, 21, 0.14);
+	border-radius: 999px;
+	background: #151817;
+	color: #fff;
+	text-decoration: none;
+	transition:
+		background-color 200ms ease,
+		border-color 200ms ease,
+		box-shadow 200ms ease,
+		transform 200ms ease;
+}
+
+.otobuton-post-buttons__page-link span::before,
+.otobuton-post-buttons__page-link span::after {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	display: block;
+	content: "";
+	background: currentColor;
+}
+
+.otobuton-post-buttons__page-link span::before {
+	width: 13px;
+	height: 2px;
+	transform: translate(-50%, -50%);
+}
+
+.otobuton-post-buttons__page-link span::after {
+	width: 8px;
+	height: 8px;
+	border-top: 2px solid currentColor;
+	border-right: 2px solid currentColor;
+	background: transparent;
+	transform: translate(-45%, -50%) rotate(45deg);
+}
+
+.otobuton-post-buttons__page-link.is-prev span::after {
+	transform: translate(-58%, -50%) rotate(-135deg);
+}
+
+.otobuton-post-buttons__page-link:not(.is-disabled):hover,
+.otobuton-post-buttons__page-link:not(.is-disabled):focus-visible {
+	border-color: rgba(245, 183, 72, 0.82);
+	background: #f5b748;
+	box-shadow: 0 12px 26px rgba(0, 0, 0, 0.18);
+	color: #171510;
+	transform: translateY(-2px);
+}
+
+.otobuton-post-buttons__page-link:focus-visible {
+	outline: 3px solid rgba(65, 214, 181, 0.48);
+	outline-offset: 3px;
+}
+
+.otobuton-post-buttons__page-link.is-disabled {
+	cursor: default;
+	opacity: 0.28;
+}
+
+.otobuton-post-buttons__page-status {
+	min-width: 58px;
+	color: #4b5563;
+	font-size: 13px;
+	font-weight: 700;
+	letter-spacing: 0;
+	line-height: 1;
+	text-align: center;
+}
+
+@media (max-width: 980px) {
+	.otobuton-post-buttons__grid--columns-4,
+	.otobuton-post-buttons__grid--columns-5,
+	.otobuton-post-buttons__grid--columns-6 {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 720px) {
+	.otobuton-post-buttons__header {
+		margin-bottom: 14px;
+	}
+
+	.otobuton-post-buttons__heading {
+		min-height: 42px;
+		padding-inline: 10px;
+	}
+
+	.otobuton-post-buttons__grid--columns-3,
+	.otobuton-post-buttons__grid--columns-4,
+	.otobuton-post-buttons__grid--columns-5,
+	.otobuton-post-buttons__grid--columns-6 {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.otobuton-post-button {
+		min-height: 132px;
+	}
+}
+
+@media (max-width: 460px) {
+	.otobuton-post-buttons__grid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.otobuton-post-button,
+	.otobuton-post-button::before,
+	.otobuton-post-button__arrow,
+	.otobuton-post-buttons__heading,
+	.otobuton-post-buttons__heading::before,
+	.otobuton-post-buttons__heading::after,
+	.otobuton-post-buttons__page-link {
+		transition: none;
+	}
+
+	.otobuton-post-button:hover,
+	.otobuton-post-button:focus-visible,
+	.otobuton-post-buttons__header:hover .otobuton-post-buttons__heading,
+	.otobuton-post-buttons__heading:focus-visible,
+	.otobuton-post-buttons__page-link:not(.is-disabled):hover,
+	.otobuton-post-buttons__page-link:not(.is-disabled):focus-visible {
+		transform: none;
+	}
+}
