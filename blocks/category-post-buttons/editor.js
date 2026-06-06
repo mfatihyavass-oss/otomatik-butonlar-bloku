@@ -82,6 +82,14 @@
 				type: 'number',
 				default: 2,
 			},
+			showExcerpt: {
+				type: 'boolean',
+				default: false,
+			},
+			showLargeImage: {
+				type: 'boolean',
+				default: false,
+			},
 			showFeaturedBackground: {
 				type: 'boolean',
 				default: true,
@@ -213,10 +221,51 @@
 						},
 					} ),
 					el( ToggleControl, {
+						label: __( 'Yazı özeti gösterilsin mi?', 'otomatik-butonlar-bloku' ),
+						help: attributes.showExcerpt
+							? __(
+									'Yazı başlığının altında özet metni gösterilir.',
+									'otomatik-butonlar-bloku'
+								)
+							: __(
+									'Kapalıyken kartlarda sadece tarih ve başlık görünür.',
+									'otomatik-butonlar-bloku'
+								),
+						checked: !! attributes.showExcerpt,
+						onChange: function ( value ) {
+							setAttributes( { showExcerpt: !! value } );
+						},
+					} ),
+					el( ToggleControl, {
+						label: __( 'Büyük resim gösterilsin mi?', 'otomatik-butonlar-bloku' ),
+						help: attributes.showLargeImage
+							? __(
+									'Öne çıkan görsel kartın üstünde büyük gösterilir; başlık ve özet görselin altında yer alır.',
+									'otomatik-butonlar-bloku'
+								)
+							: __(
+									'Kapalıyken kartlar daha kompakt görünür.',
+									'otomatik-butonlar-bloku'
+								),
+						checked: !! attributes.showLargeImage,
+						onChange: function ( value ) {
+							setAttributes( { showLargeImage: !! value } );
+						},
+					} ),
+					el( ToggleControl, {
 						label: __(
 							'Öne çıkan görseli mat arka plan yap',
 							'otomatik-butonlar-bloku'
 						),
+						help: attributes.showLargeImage
+							? __(
+									'Büyük resim açıkken bu ayar kullanılmaz; görsel zaten üstte ayrı gösterilir.',
+									'otomatik-butonlar-bloku'
+								)
+							: __(
+									'Açıkken öne çıkan görsel kartın arka planında mat şekilde görünür.',
+									'otomatik-butonlar-bloku'
+								),
 						checked: !! attributes.showFeaturedBackground,
 						onChange: function ( value ) {
 							setAttributes( { showFeaturedBackground: !! value } );

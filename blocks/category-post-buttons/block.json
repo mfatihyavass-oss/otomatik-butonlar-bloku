@@ -33,6 +33,14 @@
 			"type": "number",
 			"default": 2
 		},
+		"showExcerpt": {
+			"type": "boolean",
+			"default": false
+		},
+		"showLargeImage": {
+			"type": "boolean",
+			"default": false
+		},
 		"showFeaturedBackground": {
 			"type": "boolean",
 			"default": true

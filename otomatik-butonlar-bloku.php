@@ -117,6 +117,8 @@ function otobuton_render_category_post_buttons( array $attributes ): string {
 	$rows                     = otobuton_clamp_int( $attributes['rows'] ?? 2, 1, 6, 2 );
 	$legacy_posts_per_page    = max( 1, $columns * $rows );
 	$posts_per_page           = otobuton_clamp_int( $attributes['postsPerPage'] ?? $legacy_posts_per_page, 1, 36, $legacy_posts_per_page );
+	$show_excerpt             = ! empty( $attributes['showExcerpt'] );
+	$show_large_image         = ! empty( $attributes['showLargeImage'] );
 	$show_featured_background = ! empty( $attributes['showFeaturedBackground'] );
 	$block_title              = isset( $attributes['title'] ) ? trim( wp_strip_all_tags( (string) $attributes['title'] ) ) : __( 'Son Yazılar', 'otomatik-butonlar-bloku' );
 	$title_color              = isset( $attributes['titleColor'] ) ? sanitize_hex_color( (string) $attributes['titleColor'] ) : '#121715';
@@ -232,11 +234,18 @@ function otobuton_render_category_post_buttons( array $attributes ): string {
 				$post_id       = get_the_ID();
 				$title         = get_the_title( $post_id );
 				$title         = '' !== $title ? $title : __( 'Adsız yazı', 'otomatik-butonlar-bloku' );
-				$thumbnail_url = $show_featured_background ? get_the_post_thumbnail_url( $post_id, 'large' ) : '';
+				$thumbnail_id  = ( $show_large_image || $show_featured_background ) ? get_post_thumbnail_id( $post_id ) : 0;
+				$thumbnail_url = $thumbnail_id ? wp_get_attachment_image_url( $thumbnail_id, 'large' ) : '';
+				$excerpt       = $show_excerpt ? wp_strip_all_tags( get_the_excerpt( $post_id ) ) : '';
+				$excerpt       = ( $show_excerpt && ! $show_large_image ) ? wp_trim_words( $excerpt, 24, '...' ) : $excerpt;
 				$item_classes  = array( 'otobuton-post-button' );
 				$item_style    = '';
 
-				if ( $thumbnail_url ) {
+				if ( $show_large_image ) {
+					$item_classes[] = 'has-large-image';
+				}
+
+				if ( $thumbnail_url && ! $show_large_image && $show_featured_background ) {
 					$item_classes[] = 'has-image-bg';
 					$item_style     = sprintf(
 						'--otobuton-bg-image:url(%s);',
@@ -252,10 +261,30 @@ function otobuton_render_category_post_buttons( array $attributes ): string {
 							style="<?php echo esc_attr( $item_style ); ?>"
 						<?php endif; ?>
 					>
+						<?php if ( $show_large_image && $thumbnail_id ) : ?>
+							<span class="otobuton-post-button__media" aria-hidden="true">
+								<?php
+								echo wp_get_attachment_image(
+									$thumbnail_id,
+									'large',
+									false,
+									array(
+										'class'    => 'otobuton-post-button__image',
+										'alt'      => '',
+										'loading'  => 'lazy',
+										'decoding' => 'async',
+									)
+								); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+								?>
+							</span>
+						<?php endif; ?>
 						<span class="otobuton-post-button__arrow" aria-hidden="true"></span>
 						<span class="otobuton-post-button__content">
 							<span class="otobuton-post-button__date"><?php echo esc_html( get_the_date( '', $post_id ) ); ?></span>
 							<span class="otobuton-post-button__title"><?php echo esc_html( $title ); ?></span>
+							<?php if ( '' !== $excerpt ) : ?>
+								<span class="otobuton-post-button__excerpt"><?php echo esc_html( $excerpt ); ?></span>
+							<?php endif; ?>
 						</span>
 					</a>
 				</li>
