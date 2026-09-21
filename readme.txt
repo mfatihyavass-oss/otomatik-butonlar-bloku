@@ -4,7 +4,7 @@ Tags: gutenberg, block, posts, category, grid
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.3.0
+Stable tag: 1.5.3
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -14,7 +14,7 @@ Seçilen kategorideki yazıları Gutenberg bloğu içinde şık kutucuklarla oto
 
 Otomatik Butonlar Bloku, WordPress Gutenberg editöründe kullanılmak üzere hazırlanmış dinamik bir blok eklentisidir. Kullanıcı blok içinden kategori, başlık, başlık rengi, yazı sayısı, sütun sayısı ve öne çıkan görsel arka plan ayarlarını seçebilir.
 
-Yazılar en yeniden en eskiye otomatik sıralanır. Seçilen kategoride fazla yazı varsa blok altında önceki ve sonraki sayfa okları görünür.
+Yazılar seçilen ölçüte göre otomatik sıralanır. Varsayılan sınırsız seçenek toplam yazı sayısını kısıtlamaz; yazılar otomatik sayfalara bölünür ve her istekte yalnızca aktif sayfa yüklenir.
 
 == Installation ==
 
@@ -24,6 +24,29 @@ Yazılar en yeniden en eskiye otomatik sıralanır. Seçilen kategoride fazla ya
 4. Blok altındaki ayarları düzenleyin.
 
 == Changelog ==
+
+= 1.5.3 =
+* Satır sayısındaki gereksiz 6 üst sınırı kaldırıldı.
+
+= 1.5.2 =
+* Satır sayısı ayarı editöre eklendi.
+* Sınırsız modda sayfa boyutu artık seçilen sütun ve satır sayısına göre belirleniyor.
+
+= 1.5.1 =
+* Sayfalama alanındaki gereksiz toplam sayfa metni kaldırıldı.
+
+= 1.5.0 =
+* Sayfa yenilemeden AJAX tabanlı sayfa geçişi eklendi.
+* Numaralı sayfalama eklendi.
+* Kategori arama ve sıralama seçenekleri eklendi.
+* Tarihi gizleme ve bağlantıyı yeni sekmede açma seçenekleri eklendi.
+
+= 1.4.1 =
+* Sınırsız gösterim artık tüm yazıları tek seferde yüklemiyor; otomatik sayfalama kullanıyor.
+
+= 1.4.0 =
+* Gösterilecek yazı sayısı için sınırsız seçenek eklendi ve varsayılan sınırsız yapıldı.
+* Sayfalama için 6-1.000 arası seçenekler eklendi.
 
 = 1.3.0 =
 * Başlık rengi seçimi eklendi.

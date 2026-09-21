@@ -3,7 +3,7 @@
  * Plugin Name: Otomatik Butonlar Bloku
  * Description: Seçilen kategorideki en yeni yazıları Gutenberg bloğu olarak şık kutucuklarla otomatik gösterir.
  * Plugin URI: https://bursa.mayahukuk.com
- * Version: 1.3.0
+ * Version: 1.5.3
  * Author: Maya Hukuk
  * Author URI: https://bursa.mayahukuk.com
  * License: GPL-2.0-or-later
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'OTOBUTON_VERSION', '1.3.0' );
+define( 'OTOBUTON_VERSION', '1.5.3' );
 define( 'OTOBUTON_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'OTOBUTON_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
@@ -40,6 +40,26 @@ function otobuton_clamp_int( $value, int $min, int $max, int $default ): int {
 }
 
 /**
+ * Resolve the configured post limit.
+ *
+ * Zero means unlimited total posts. The caller still chooses a safe page
+ * size so an unlimited archive is never loaded in one request.
+ *
+ * @param mixed $value    Raw block attribute value.
+ * @param int   $fallback Fallback value for malformed attributes.
+ * @return int
+ */
+function otobuton_get_posts_limit( $value, int $fallback = 0 ): int {
+	if ( ! is_numeric( $value ) ) {
+		return $fallback;
+	}
+
+	$value = (int) $value;
+
+	return $value >= 0 ? $value : $fallback;
+}
+
+/**
  * Build a front-end pagination URL for this block instance.
  *
  * @param string $page_query_key Query string key used by the block instance.
@@ -55,6 +75,42 @@ function otobuton_get_pagination_url( string $page_query_key, int $page, string 
 	}
 
 	return $url . '#' . rawurlencode( $section_id );
+}
+
+/**
+ * Build a compact numbered pagination list.
+ *
+ * A zero entry represents a visual ellipsis between page ranges.
+ *
+ * @param int $current_page Current page number.
+ * @param int $total_pages  Total page count.
+ * @return array<int>
+ */
+function otobuton_get_pagination_pages( int $current_page, int $total_pages ): array {
+	if ( $total_pages <= 7 ) {
+		return range( 1, max( 1, $total_pages ) );
+	}
+
+	$pages = array( 1 );
+
+	if ( $current_page > 3 ) {
+		$pages[] = 0;
+	}
+
+	$start_page = max( 2, $current_page - 1 );
+	$end_page   = min( $total_pages - 1, $current_page + 1 );
+
+	for ( $page = $start_page; $page <= $end_page; $page++ ) {
+		$pages[] = $page;
+	}
+
+	if ( $current_page < $total_pages - 2 ) {
+		$pages[] = 0;
+	}
+
+	$pages[] = $total_pages;
+
+	return $pages;
 }
 
 /**
@@ -79,6 +135,14 @@ function otobuton_register_category_post_buttons_block(): void {
 			'wp-server-side-render',
 		),
 		filemtime( $block_dir . '/editor.js' ),
+		true
+	);
+
+	wp_register_script(
+		'otobuton-category-post-buttons-view',
+		$block_url . 'view.js',
+		array(),
+		filemtime( $block_dir . '/view.js' ),
 		true
 	);
 
@@ -114,12 +178,16 @@ add_action( 'init', 'otobuton_register_category_post_buttons_block' );
 function otobuton_render_category_post_buttons( array $attributes ): string {
 	$category_id              = isset( $attributes['categoryId'] ) ? absint( $attributes['categoryId'] ) : 0;
 	$columns                  = otobuton_clamp_int( $attributes['columns'] ?? 3, 1, 6, 3 );
-	$rows                     = otobuton_clamp_int( $attributes['rows'] ?? 2, 1, 6, 2 );
-	$legacy_posts_per_page    = max( 1, $columns * $rows );
-	$posts_per_page           = otobuton_clamp_int( $attributes['postsPerPage'] ?? $legacy_posts_per_page, 1, 36, $legacy_posts_per_page );
+	$rows                     = max( 1, otobuton_get_posts_limit( $attributes['rows'] ?? 2, 2 ) );
+	$posts_limit              = otobuton_get_posts_limit( $attributes['postsPerPage'] ?? 0 );
+	$posts_per_page           = $posts_limit > 0 ? $posts_limit : max( 1, $columns * $rows );
+	$sort_by                  = isset( $attributes['sortBy'] ) ? sanitize_key( (string) $attributes['sortBy'] ) : 'date';
+	$sort_order               = isset( $attributes['sortOrder'] ) ? strtoupper( sanitize_key( (string) $attributes['sortOrder'] ) ) : 'DESC';
 	$show_excerpt             = ! empty( $attributes['showExcerpt'] );
+	$show_date                = ! array_key_exists( 'showDate', $attributes ) || ! empty( $attributes['showDate'] );
 	$show_large_image         = ! empty( $attributes['showLargeImage'] );
 	$show_featured_background = ! empty( $attributes['showFeaturedBackground'] );
+	$open_in_new_tab          = ! empty( $attributes['openInNewTab'] );
 	$block_title              = isset( $attributes['title'] ) ? trim( wp_strip_all_tags( (string) $attributes['title'] ) ) : __( 'Son Yazılar', 'otomatik-butonlar-bloku' );
 	$title_color              = isset( $attributes['titleColor'] ) ? sanitize_hex_color( (string) $attributes['titleColor'] ) : '#121715';
 	$instance_id              = isset( $attributes['instanceId'] ) ? sanitize_key( (string) $attributes['instanceId'] ) : '';
@@ -129,6 +197,14 @@ function otobuton_render_category_post_buttons( array $attributes ): string {
 		$title_color = '#121715';
 	}
 
+	if ( ! in_array( $sort_by, array( 'date', 'modified', 'title' ), true ) ) {
+		$sort_by = 'date';
+	}
+
+	if ( ! in_array( $sort_order, array( 'ASC', 'DESC' ), true ) ) {
+		$sort_order = 'DESC';
+	}
+
 	if ( '' === $instance_id ) {
 		$instance_id = substr(
 			md5(
@@ -136,7 +212,9 @@ function otobuton_render_category_post_buttons( array $attributes ): string {
 					array(
 						'categoryId'   => $category_id,
 						'columns'      => $columns,
-						'postsPerPage' => $posts_per_page,
+						'postsPerPage' => $posts_limit,
+						'sortBy'       => $sort_by,
+						'sortOrder'    => $sort_order,
 						'title'        => $block_title,
 					)
 				)
@@ -171,9 +249,8 @@ function otobuton_render_category_post_buttons( array $attributes ): string {
 		'post_type'           => 'post',
 		'post_status'         => 'publish',
 		'posts_per_page'      => $posts_per_page,
-		'paged'               => $current_page,
-		'orderby'             => 'date',
-		'order'               => 'DESC',
+		'orderby'             => $sort_by,
+		'order'               => $sort_order,
 		'ignore_sticky_posts' => true,
 		'no_found_rows'       => false,
 	);
@@ -181,6 +258,8 @@ function otobuton_render_category_post_buttons( array $attributes ): string {
 	if ( $category_id > 0 ) {
 		$query_args['cat'] = $category_id;
 	}
+
+	$query_args['paged'] = $current_page;
 
 	$posts = new WP_Query( $query_args );
 	$total_pages = (int) $posts->max_num_pages;
@@ -257,6 +336,10 @@ function otobuton_render_category_post_buttons( array $attributes ): string {
 					<a
 						class="<?php echo esc_attr( implode( ' ', $item_classes ) ); ?>"
 						href="<?php echo esc_url( get_permalink( $post_id ) ); ?>"
+						<?php if ( $open_in_new_tab ) : ?>
+							target="_blank"
+							rel="noopener noreferrer"
+						<?php endif; ?>
 						<?php if ( $item_style ) : ?>
 							style="<?php echo esc_attr( $item_style ); ?>"
 						<?php endif; ?>
@@ -280,7 +363,9 @@ function otobuton_render_category_post_buttons( array $attributes ): string {
 						<?php endif; ?>
 						<span class="otobuton-post-button__arrow" aria-hidden="true"></span>
 						<span class="otobuton-post-button__content">
-							<span class="otobuton-post-button__date"><?php echo esc_html( get_the_date( '', $post_id ) ); ?></span>
+							<?php if ( $show_date ) : ?>
+								<span class="otobuton-post-button__date"><?php echo esc_html( get_the_date( '', $post_id ) ); ?></span>
+							<?php endif; ?>
 							<span class="otobuton-post-button__title"><?php echo esc_html( $title ); ?></span>
 							<?php if ( '' !== $excerpt ) : ?>
 								<span class="otobuton-post-button__excerpt"><?php echo esc_html( $excerpt ); ?></span>
@@ -307,8 +392,24 @@ function otobuton_render_category_post_buttons( array $attributes ): string {
 					</span>
 				<?php endif; ?>
 
-				<span class="otobuton-post-buttons__page-status">
-					<?php echo esc_html( sprintf( '%d / %d', $current_page, $total_pages ) ); ?>
+				<span class="otobuton-post-buttons__page-numbers">
+					<?php foreach ( otobuton_get_pagination_pages( $current_page, $total_pages ) as $page_number ) : ?>
+						<?php if ( 0 === $page_number ) : ?>
+							<span class="otobuton-post-buttons__page-ellipsis" aria-hidden="true">…</span>
+						<?php elseif ( $page_number === $current_page ) : ?>
+							<span class="otobuton-post-buttons__page-number is-current" aria-current="page">
+								<?php echo esc_html( $page_number ); ?>
+							</span>
+						<?php else : ?>
+							<a
+								class="otobuton-post-buttons__page-number"
+								href="<?php echo esc_url( otobuton_get_pagination_url( $page_query_key, $page_number, $section_id ) ); ?>"
+								aria-label="<?php echo esc_attr( sprintf( __( '%d. sayfa', 'otomatik-butonlar-bloku' ), $page_number ) ); ?>"
+							>
+								<?php echo esc_html( $page_number ); ?>
+							</a>
+						<?php endif; ?>
+					<?php endforeach; ?>
 				</span>
 
 				<?php if ( $current_page < $total_pages ) : ?>
