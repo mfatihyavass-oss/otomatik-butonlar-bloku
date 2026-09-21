@@ -409,6 +409,62 @@
 	margin-top: clamp(14px, 2vw, 20px);
 }
 
+.otobuton-post-buttons.is-loading {
+	opacity: 0.58;
+	pointer-events: none;
+	transition: opacity 180ms ease;
+}
+
+.otobuton-post-buttons__page-numbers {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+}
+
+.otobuton-post-buttons__page-number,
+.otobuton-post-buttons__page-ellipsis {
+	display: grid;
+	width: 34px;
+	height: 34px;
+	place-items: center;
+	border-radius: 999px;
+	color: #4b5563;
+	font-size: 12px;
+	font-weight: 700;
+	line-height: 1;
+	text-decoration: none;
+}
+
+.otobuton-post-buttons__page-number {
+	border: 1px solid rgba(18, 23, 21, 0.12);
+	background: #fff;
+	transition:
+		background-color 200ms ease,
+		border-color 200ms ease,
+		box-shadow 200ms ease,
+		color 200ms ease,
+		transform 200ms ease;
+}
+
+.otobuton-post-buttons__page-number:hover,
+.otobuton-post-buttons__page-number:focus-visible,
+.otobuton-post-buttons__page-number.is-current {
+	border-color: #f5b748;
+	background: #f5b748;
+	box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+	color: #171510;
+	transform: translateY(-1px);
+}
+
+.otobuton-post-buttons__page-number:focus-visible {
+	outline: 3px solid rgba(65, 214, 181, 0.48);
+	outline-offset: 3px;
+}
+
+.otobuton-post-buttons__page-ellipsis {
+	width: 22px;
+}
+
 .otobuton-post-buttons__page-link {
 	position: relative;
 	display: grid;
@@ -475,16 +531,6 @@
 	opacity: 0.28;
 }
 
-.otobuton-post-buttons__page-status {
-	min-width: 58px;
-	color: #4b5563;
-	font-size: 13px;
-	font-weight: 700;
-	letter-spacing: 0;
-	line-height: 1;
-	text-align: center;
-}
-
 @media (max-width: 980px) {
 	.otobuton-post-buttons__grid--columns-4,
 	.otobuton-post-buttons__grid--columns-5,
@@ -533,12 +579,22 @@
 		transition: none;
 	}
 
+	.otobuton-post-buttons__page-number {
+		transition: none;
+	}
+
 	.otobuton-post-button:hover,
 	.otobuton-post-button:focus-visible,
 	.otobuton-post-buttons__header:hover .otobuton-post-buttons__heading,
 	.otobuton-post-buttons__heading:focus-visible,
-	.otobuton-post-buttons__page-link:not(.is-disabled):hover,
-	.otobuton-post-buttons__page-link:not(.is-disabled):focus-visible {
+		.otobuton-post-buttons__page-link:not(.is-disabled):hover,
+		.otobuton-post-buttons__page-link:not(.is-disabled):focus-visible {
+			transform: none;
+		}
+
+	.otobuton-post-buttons__page-number:hover,
+	.otobuton-post-buttons__page-number:focus-visible,
+	.otobuton-post-buttons__page-number.is-current {
 		transform: none;
 	}
 

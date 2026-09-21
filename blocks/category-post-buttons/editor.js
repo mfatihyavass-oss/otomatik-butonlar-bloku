@@ -6,13 +6,16 @@
 	var InspectorControls = wp.blockEditor.InspectorControls;
 	var useBlockProps = wp.blockEditor.useBlockProps;
 	var ColorPalette = wp.components.ColorPalette;
+	var NumberControl = wp.components.NumberControl || wp.components.__experimentalNumberControl;
 	var PanelBody = wp.components.PanelBody;
 	var RangeControl = wp.components.RangeControl;
+	var SearchControl = wp.components.SearchControl;
 	var SelectControl = wp.components.SelectControl;
 	var Spinner = wp.components.Spinner;
 	var TextControl = wp.components.TextControl;
 	var ToggleControl = wp.components.ToggleControl;
 	var useEffect = wp.element.useEffect;
+	var useState = wp.element.useState;
 	var useSelect = wp.data.useSelect;
 	var ServerSideRender = wp.serverSideRender.default || wp.serverSideRender;
 	var titleColorOptions = [
@@ -47,6 +50,66 @@
 			color: '#000000',
 		},
 	];
+	var postsPerPageOptions = [
+		{
+			label: __( 'Sınırsız (otomatik sayfalama)', 'otomatik-butonlar-bloku' ),
+			value: '0',
+		},
+	].concat(
+		Array.from( { length: 36 }, function ( _, index ) {
+			var value = String( index + 1 );
+
+			return {
+				label: value,
+				value: value,
+			};
+		} )
+	).concat( [
+		{
+			label: '60',
+			value: '60',
+		},
+		{
+			label: '120',
+			value: '120',
+		},
+		{
+			label: '240',
+			value: '240',
+		},
+		{
+			label: '500',
+			value: '500',
+		},
+		{
+			label: '1.000',
+			value: '1000',
+		},
+	] );
+	var sortByOptions = [
+		{
+			label: __( 'Yayın tarihi', 'otomatik-butonlar-bloku' ),
+			value: 'date',
+		},
+		{
+			label: __( 'Güncellenme tarihi', 'otomatik-butonlar-bloku' ),
+			value: 'modified',
+		},
+		{
+			label: __( 'Başlık', 'otomatik-butonlar-bloku' ),
+			value: 'title',
+		},
+	];
+	var sortOrderOptions = [
+		{
+			label: __( 'Yeniden eskiye', 'otomatik-butonlar-bloku' ),
+			value: 'DESC',
+		},
+		{
+			label: __( 'Eskiden yeniye', 'otomatik-butonlar-bloku' ),
+			value: 'ASC',
+		},
+	];
 
 	registerBlockType( 'otobuton/category-post-buttons', {
 		apiVersion: 3,
@@ -72,7 +135,15 @@
 			},
 			postsPerPage: {
 				type: 'number',
-				default: 6,
+				default: 0,
+			},
+			sortBy: {
+				type: 'string',
+				default: 'date',
+			},
+			sortOrder: {
+				type: 'string',
+				default: 'DESC',
 			},
 			columns: {
 				type: 'number',
@@ -86,6 +157,10 @@
 				type: 'boolean',
 				default: false,
 			},
+			showDate: {
+				type: 'boolean',
+				default: true,
+			},
 			showLargeImage: {
 				type: 'boolean',
 				default: false,
@@ -93,6 +168,10 @@
 			showFeaturedBackground: {
 				type: 'boolean',
 				default: true,
+			},
+			openInNewTab: {
+				type: 'boolean',
+				default: false,
 			},
 			instanceId: {
 				type: 'string',
@@ -110,17 +189,31 @@
 		edit: function ( props ) {
 			var attributes = props.attributes;
 			var setAttributes = props.setAttributes;
+			var categorySearchState = useState( '' );
+			var categorySearch = categorySearchState[ 0 ];
+			var setCategorySearch = categorySearchState[ 1 ];
 			var blockProps = useBlockProps( {
 				className: 'otobuton-category-post-buttons-editor',
 			} );
 			var categories = useSelect( function ( select ) {
-				return select( 'core' ).getEntityRecords( 'taxonomy', 'category', {
+				var query = {
 					hide_empty: false,
 					order: 'asc',
 					orderby: 'name',
 					per_page: 100,
-				} );
-			}, [] );
+				};
+
+				if ( categorySearch ) {
+					query.search = categorySearch;
+				}
+
+				return select( 'core' ).getEntityRecords( 'taxonomy', 'category', query );
+			}, [ categorySearch ] );
+			var selectedCategory = useSelect( function ( select ) {
+				return attributes.categoryId
+					? select( 'core' ).getEntityRecord( 'taxonomy', 'category', attributes.categoryId )
+					: null;
+			}, [ attributes.categoryId ] );
 			var categoryOptions = [
 				{
 					label: __( 'Tüm kategoriler', 'otomatik-butonlar-bloku' ),
@@ -137,6 +230,18 @@
 						};
 					} )
 				);
+			}
+
+			if (
+				selectedCategory &&
+				! categoryOptions.some( function ( option ) {
+					return Number( option.value ) === selectedCategory.id;
+				} )
+			) {
+				categoryOptions.splice( 1, 0, {
+					label: selectedCategory.name,
+					value: selectedCategory.id,
+				} );
 			}
 
 			useEffect(
@@ -194,21 +299,52 @@
 							},
 						} )
 					),
+					el( SearchControl, {
+						label: __( 'Kategori ara', 'otomatik-butonlar-bloku' ),
+						value: categorySearch,
+						placeholder: __( 'Kategori adı yazın', 'otomatik-butonlar-bloku' ),
+						onChange: setCategorySearch,
+					} ),
 					el( SelectControl, {
 						label: __( 'Kategori', 'otomatik-butonlar-bloku' ),
-						value: attributes.categoryId,
+						value: attributes.categoryId || 0,
 						options: categoryOptions,
 						onChange: function ( value ) {
 							setAttributes( { categoryId: parseInt( value, 10 ) || 0 } );
 						},
 					} ),
-					el( RangeControl, {
-						label: __( 'Gösterilecek yazı sayısı', 'otomatik-butonlar-bloku' ),
-						value: attributes.postsPerPage || 6,
-						min: 1,
-						max: 36,
+					el( SelectControl, {
+						label: __( 'Neye göre sıralansın?', 'otomatik-butonlar-bloku' ),
+						value: attributes.sortBy || 'date',
+						options: sortByOptions,
 						onChange: function ( value ) {
-							setAttributes( { postsPerPage: value || 6 } );
+							setAttributes( { sortBy: value } );
+						},
+					} ),
+					el( SelectControl, {
+						label: __( 'Sıralama yönü', 'otomatik-butonlar-bloku' ),
+						value: attributes.sortOrder || 'DESC',
+						options: sortOrderOptions,
+						onChange: function ( value ) {
+							setAttributes( { sortOrder: value } );
+						},
+					} ),
+					el( SelectControl, {
+						label: __( 'Gösterilecek yazı sayısı', 'otomatik-butonlar-bloku' ),
+						help:
+							0 === Number( attributes.postsPerPage )
+								? __(
+									'Sınırsız seçim toplam yazı sayısını kısıtlamaz; yazılar performans için otomatik olarak sayfalara bölünür.',
+										'otomatik-butonlar-bloku'
+									)
+								: __(
+										'Bu sayı her sayfada gösterilecek yazı adedidir; fazla yazılar otomatik olarak sayfalara bölünür.',
+										'otomatik-butonlar-bloku'
+									),
+						value: String( Number.isFinite( Number( attributes.postsPerPage ) ) ? attributes.postsPerPage : 0 ),
+						options: postsPerPageOptions,
+						onChange: function ( value ) {
+							setAttributes( { postsPerPage: parseInt( value, 10 ) || 0 } );
 						},
 					} ),
 					el( RangeControl, {
@@ -218,6 +354,45 @@
 						max: 6,
 						onChange: function ( value ) {
 							setAttributes( { columns: value || 3 } );
+						},
+					} ),
+					el( NumberControl, {
+						label: __( 'Satır sayısı', 'otomatik-butonlar-bloku' ),
+						help:
+							0 === Number( attributes.postsPerPage )
+								? __(
+										'Sınırsız modda sayfa başına yazı sayısı sütun × satır olarak hesaplanır.',
+										'otomatik-butonlar-bloku'
+									)
+								: __(
+										'Özel sayfa boyutu seçildiğinde bu ayar yalnızca kart düzenini etkiler.',
+										'otomatik-butonlar-bloku'
+									),
+						value: attributes.rows || 2,
+						min: 1,
+						step: 1,
+						onChange: function ( value ) {
+							var rowCount = parseInt( value, 10 );
+
+							setAttributes( { rows: Number.isFinite( rowCount ) && rowCount > 0 ? rowCount : 2 } );
+						},
+					} ),
+					el( ToggleControl, {
+						label: __( 'Tarihi göster', 'otomatik-butonlar-bloku' ),
+						checked: ! ( attributes.showDate === false ),
+						onChange: function ( value ) {
+							setAttributes( { showDate: !! value } );
+						},
+					} ),
+					el( ToggleControl, {
+						label: __( 'Yazıyı yeni sekmede aç', 'otomatik-butonlar-bloku' ),
+						help: __(
+							'Etkinleştirildiğinde kart bağlantıları yeni tarayıcı sekmesinde açılır.',
+							'otomatik-butonlar-bloku'
+						),
+						checked: !! attributes.openInNewTab,
+						onChange: function ( value ) {
+							setAttributes( { openInNewTab: !! value } );
 						},
 					} ),
 					el( ToggleControl, {
