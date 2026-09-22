@@ -72,6 +72,7 @@ Son durum: **156 passed / 0 failed** (attributes 48, block-store 47, abilities 6
 
 ## Sürüm geçmişi
 
+- **1.6.1** — Abiliteler WordPress Abilities API'nin REST listesinde görünür hale geldi (`meta.public`, `meta.show_in_rest`); böylece abilite toplayıcıları (miniOrange Secure MCP Server gibi) bu araçları rollere verebiliyor.
 - **1.6.0** — Elle yazı seçimi ve hariç tutma, bulunduğu yazıyı gizleme, sayfalamayı kapatma, kaydırma (offset); blok yönetimi için REST uçları ve beş MCP aracı; yerel test paketi.
 - **1.5.3** — Sayfalama ve blok ayarları iyileştirmeleri.
 
@@ -137,7 +138,7 @@ otomatik-butonlar-bloku/
 
 ## Sürüm
 
-Güncel sürüm: `1.6.0`
+Güncel sürüm: `1.6.1`
 
 ## Lisans
 

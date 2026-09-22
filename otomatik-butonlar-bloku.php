@@ -3,7 +3,7 @@
  * Plugin Name: Otomatik Butonlar Bloku
  * Description: Seçilen kategorideki en yeni yazıları Gutenberg bloğu olarak şık kutucuklarla otomatik gösterir.
  * Plugin URI: https://bursa.mayahukuk.com
- * Version: 1.6.0
+ * Version: 1.6.1
  * Author: Maya Hukuk
  * Author URI: https://bursa.mayahukuk.com
  * License: GPL-2.0-or-later
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'OTOBUTON_VERSION', '1.6.0' );
+define( 'OTOBUTON_VERSION', '1.6.1' );
 define( 'OTOBUTON_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'OTOBUTON_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
