@@ -40,6 +40,8 @@ foreach ( $registered as $name => $args ) {
 	otobuton_test_assert( $name . ' yürütücüsü çağrılabilir', is_callable( $args['execute_callback'] ) );
 	otobuton_test_assert( $name . ' yetki kontrolü çağrılabilir', is_callable( $args['permission_callback'] ) );
 	otobuton_test_same( $name . ' MCP görünürlüğü', true, $args['meta']['mcp']['public'] );
+	otobuton_test_same( $name . ' abilite herkese açık', true, $args['meta']['public'] );
+	otobuton_test_same( $name . ' REST görünürlüğü', true, $args['meta']['show_in_rest'] );
 	otobuton_test_assert( $name . ' çıktı şeması nesne', isset( $args['output_schema']['type'] ) && 'object' === $args['output_schema']['type'] );
 }
 

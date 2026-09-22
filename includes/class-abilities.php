@@ -262,7 +262,14 @@ final class OTOBUTON_Abilities {
 	}
 
 	/**
-	 * MCP annotations.
+	 * MCP / REST annotations and visibility flags.
+	 *
+	 * `public` + `show_in_rest` are what make an ability discoverable through
+	 * the WordPress Abilities API REST route
+	 * (/wp-json/wp-abilities/v1/abilities) — and therefore through ability
+	 * aggregators such as the miniOrange Secure MCP Server, which only grant
+	 * abilities it can see there. `mcp.public` additionally exposes the ability
+	 * to the MCP Adapter endpoint. All four keys are needed for both routes.
 	 *
 	 * @param bool $readonly    Read only ability.
 	 * @param bool $destructive Destructive ability.
@@ -271,8 +278,10 @@ final class OTOBUTON_Abilities {
 	 */
 	private static function meta( bool $readonly, bool $destructive, bool $idempotent ): array {
 		return array(
-			'mcp'         => array( 'public' => true ),
-			'annotations' => array(
+			'public'       => true,
+			'show_in_rest' => true,
+			'mcp'          => array( 'public' => true ),
+			'annotations'  => array(
 				'readonly'    => $readonly,
 				'destructive' => $destructive,
 				'idempotent'  => $idempotent,

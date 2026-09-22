@@ -4,7 +4,7 @@ Tags: gutenberg, block, posts, category, grid
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.6.0
+Stable tag: 1.6.1
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -24,6 +24,9 @@ Yazılar seçilen ölçüte göre otomatik sıralanır. Varsayılan sınırsız 
 4. Blok altındaki ayarları düzenleyin.
 
 == Changelog ==
+
+= 1.6.1 =
+* Abiliteler artık WordPress Abilities API'nin REST listesinde görünüyor (`meta.public`, `meta.show_in_rest`). Böylece miniOrange Secure MCP Server gibi abilite toplayıcıları bu araçları rollere verebiliyor.
 
 = 1.6.0 =
 * Elle yazı seçimi paneli: yazıları arayıp seçerek verdiğiniz sırayla listeleme.
