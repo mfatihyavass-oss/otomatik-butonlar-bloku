@@ -3,7 +3,7 @@
  * Plugin Name: Otomatik Butonlar Bloku
  * Description: Seçilen kategorideki en yeni yazıları Gutenberg bloğu olarak şık kutucuklarla otomatik gösterir.
  * Plugin URI: https://bursa.mayahukuk.com
- * Version: 1.5.3
+ * Version: 1.6.0
  * Author: Maya Hukuk
  * Author URI: https://bursa.mayahukuk.com
  * License: GPL-2.0-or-later
@@ -20,9 +20,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'OTOBUTON_VERSION', '1.5.3' );
+define( 'OTOBUTON_VERSION', '1.6.0' );
 define( 'OTOBUTON_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'OTOBUTON_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+
+require_once OTOBUTON_PLUGIN_DIR . 'includes/class-attributes.php';
+require_once OTOBUTON_PLUGIN_DIR . 'includes/class-block-store.php';
+require_once OTOBUTON_PLUGIN_DIR . 'includes/class-rest.php';
+require_once OTOBUTON_PLUGIN_DIR . 'includes/class-abilities.php';
+
+/**
+ * Boot the REST layer and (when the Abilities API is present) the MCP tools.
+ *
+ * @return void
+ */
+function otobuton_boot_services(): void {
+	new OTOBUTON_REST();
+	new OTOBUTON_Abilities();
+}
+add_action( 'plugins_loaded', 'otobuton_boot_services' );
 
 /**
  * Keep numeric block attributes inside the intended editor limits.
@@ -176,33 +192,32 @@ add_action( 'init', 'otobuton_register_category_post_buttons_block' );
  * @return string
  */
 function otobuton_render_category_post_buttons( array $attributes ): string {
-	$category_id              = isset( $attributes['categoryId'] ) ? absint( $attributes['categoryId'] ) : 0;
-	$columns                  = otobuton_clamp_int( $attributes['columns'] ?? 3, 1, 6, 3 );
-	$rows                     = max( 1, otobuton_get_posts_limit( $attributes['rows'] ?? 2, 2 ) );
-	$posts_limit              = otobuton_get_posts_limit( $attributes['postsPerPage'] ?? 0 );
-	$posts_per_page           = $posts_limit > 0 ? $posts_limit : max( 1, $columns * $rows );
-	$sort_by                  = isset( $attributes['sortBy'] ) ? sanitize_key( (string) $attributes['sortBy'] ) : 'date';
-	$sort_order               = isset( $attributes['sortOrder'] ) ? strtoupper( sanitize_key( (string) $attributes['sortOrder'] ) ) : 'DESC';
-	$show_excerpt             = ! empty( $attributes['showExcerpt'] );
-	$show_date                = ! array_key_exists( 'showDate', $attributes ) || ! empty( $attributes['showDate'] );
-	$show_large_image         = ! empty( $attributes['showLargeImage'] );
-	$show_featured_background = ! empty( $attributes['showFeaturedBackground'] );
-	$open_in_new_tab          = ! empty( $attributes['openInNewTab'] );
-	$block_title              = isset( $attributes['title'] ) ? trim( wp_strip_all_tags( (string) $attributes['title'] ) ) : __( 'Son Yazılar', 'otomatik-butonlar-bloku' );
-	$title_color              = isset( $attributes['titleColor'] ) ? sanitize_hex_color( (string) $attributes['titleColor'] ) : '#121715';
-	$instance_id              = isset( $attributes['instanceId'] ) ? sanitize_key( (string) $attributes['instanceId'] ) : '';
+	$attributes               = otobuton_normalize_attributes( $attributes );
+	$category_id              = (int) $attributes['categoryId'];
+	$columns                  = (int) $attributes['columns'];
+	$rows                     = (int) $attributes['rows'];
+	$posts_limit              = (int) $attributes['postsPerPage'];
+	$posts_per_page           = otobuton_resolve_page_size( $attributes );
+	$sort_by                  = (string) $attributes['sortBy'];
+	$sort_order               = (string) $attributes['sortOrder'];
+	$show_excerpt             = (bool) $attributes['showExcerpt'];
+	$show_date                = (bool) $attributes['showDate'];
+	$show_large_image         = (bool) $attributes['showLargeImage'];
+	$show_featured_background = (bool) $attributes['showFeaturedBackground'];
+	$open_in_new_tab          = (bool) $attributes['openInNewTab'];
+	$exclude_current          = (bool) $attributes['excludeCurrent'];
+	$show_pagination          = (bool) $attributes['showPagination'];
+	$offset                   = (int) $attributes['offset'];
+	$manual_ids               = (array) $attributes['manualIds'];
+	$exclude_ids              = (array) $attributes['excludeIds'];
+	$block_title              = (string) $attributes['title'];
+	$title_color              = (string) $attributes['titleColor'];
+	$instance_id              = (string) $attributes['instanceId'];
 	$label                    = __( 'Son yazılar', 'otomatik-butonlar-bloku' );
+	$manual_mode              = ! empty( $manual_ids );
 
 	if ( ! $title_color ) {
 		$title_color = '#121715';
-	}
-
-	if ( ! in_array( $sort_by, array( 'date', 'modified', 'title' ), true ) ) {
-		$sort_by = 'date';
-	}
-
-	if ( ! in_array( $sort_order, array( 'ASC', 'DESC' ), true ) ) {
-		$sort_order = 'DESC';
 	}
 
 	if ( '' === $instance_id ) {
@@ -233,7 +248,7 @@ function otobuton_render_category_post_buttons( array $attributes ): string {
 		$current_page = max( 1, absint( wp_unslash( $_GET[ $page_query_key ] ) ) );
 	}
 
-	if ( $category_id > 0 ) {
+	if ( ! $manual_mode && $category_id > 0 ) {
 		$category = get_category( $category_id );
 
 		if ( $category && ! is_wp_error( $category ) ) {
@@ -245,24 +260,65 @@ function otobuton_render_category_post_buttons( array $attributes ): string {
 		}
 	}
 
+	if ( $manual_mode ) {
+		$label = __( 'Seçilen yazılar', 'otomatik-butonlar-bloku' );
+	}
+
+	/*
+	 * Manual exclusions (excludeIds) plus the post currently being rendered,
+	 * so a block placed inside an article never links to that article itself.
+	 */
+	$excluded_ids = $exclude_ids;
+
+	if ( $exclude_current && is_singular() ) {
+		$current_post_id = (int) get_queried_object_id();
+
+		if ( $current_post_id > 0 ) {
+			$excluded_ids[] = $current_post_id;
+		}
+	}
+
 	$query_args = array(
 		'post_type'           => 'post',
 		'post_status'         => 'publish',
-		'posts_per_page'      => $posts_per_page,
-		'orderby'             => $sort_by,
-		'order'               => $sort_order,
 		'ignore_sticky_posts' => true,
-		'no_found_rows'       => false,
 	);
 
-	if ( $category_id > 0 ) {
-		$query_args['cat'] = $category_id;
+	if ( $manual_mode ) {
+		// Elle seçim: verilen sıra korunur, kategori ve sayfalama uygulanmaz.
+		$query_args['post__in']       = $manual_ids;
+		$query_args['orderby']        = 'post__in';
+		$query_args['order']          = 'ASC';
+		$query_args['posts_per_page'] = min( count( $manual_ids ), OTOBUTON_NO_PAGINATION_CAP );
+		$query_args['no_found_rows']  = true;
+	} else {
+		$query_args['posts_per_page'] = $show_pagination ? $posts_per_page : OTOBUTON_NO_PAGINATION_CAP;
+		$query_args['orderby']        = $sort_by;
+		$query_args['order']          = $sort_order;
+		$query_args['no_found_rows']  = ! $show_pagination;
+
+		if ( $category_id > 0 ) {
+			$query_args['cat'] = $category_id;
+		}
+
+		/*
+		 * Offset only makes sense in a single, pagination-free list: WordPress
+		 * rejects an offset together with paged queries, and silently ignoring
+		 * the attribute would be worse than documenting the limit.
+		 */
+		if ( ! $show_pagination && $offset > 0 ) {
+			$query_args['offset'] = $offset;
+		}
+
+		$query_args['paged'] = $current_page;
 	}
 
-	$query_args['paged'] = $current_page;
+	if ( $excluded_ids ) {
+		$query_args['post__not_in'] = array_values( array_unique( array_map( 'intval', $excluded_ids ) ) );
+	}
 
-	$posts = new WP_Query( $query_args );
-	$total_pages = (int) $posts->max_num_pages;
+	$posts       = new WP_Query( $query_args );
+	$total_pages = ( $manual_mode || ! $show_pagination ) ? 1 : (int) $posts->max_num_pages;
 
 	if ( $total_pages > 0 && $current_page > $total_pages ) {
 		wp_reset_postdata();
@@ -380,7 +436,7 @@ function otobuton_render_category_post_buttons( array $attributes ): string {
 		<?php endif; ?>
 		</ul>
 
-		<?php if ( $total_pages > 1 ) : ?>
+		<?php if ( $show_pagination && $total_pages > 1 ) : ?>
 			<nav class="otobuton-post-buttons__pagination" aria-label="<?php esc_attr_e( 'Yazı kutuları sayfalama', 'otomatik-butonlar-bloku' ); ?>">
 				<?php if ( $current_page > 1 ) : ?>
 					<a class="otobuton-post-buttons__page-link is-prev" href="<?php echo esc_url( otobuton_get_pagination_url( $page_query_key, $current_page - 1, $section_id ) ); ?>" aria-label="<?php esc_attr_e( 'Önceki sayfa', 'otomatik-butonlar-bloku' ); ?>">

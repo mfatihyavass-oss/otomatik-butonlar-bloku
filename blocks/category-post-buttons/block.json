@@ -2,7 +2,7 @@
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
 	"name": "otobuton/category-post-buttons",
-	"version": "1.5.3",
+	"version": "1.6.0",
 	"title": "Otomatik Yazı Kutuları",
 	"category": "widgets",
 	"icon": "screenoptions",
@@ -64,6 +64,32 @@
 		"instanceId": {
 			"type": "string",
 			"default": ""
+		},
+		"excludeCurrent": {
+			"type": "boolean",
+			"default": false
+		},
+		"showPagination": {
+			"type": "boolean",
+			"default": true
+		},
+		"offset": {
+			"type": "number",
+			"default": 0
+		},
+		"manualIds": {
+			"type": "array",
+			"default": [],
+			"items": {
+				"type": "number"
+			}
+		},
+		"excludeIds": {
+			"type": "array",
+			"default": [],
+			"items": {
+				"type": "number"
+			}
 		}
 	},
 	"supports": {

@@ -4,7 +4,7 @@ Tags: gutenberg, block, posts, category, grid
 Requires at least: 6.5
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 1.5.3
+Stable tag: 1.6.0
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -24,6 +24,14 @@ Yazılar seçilen ölçüte göre otomatik sıralanır. Varsayılan sınırsız 
 4. Blok altındaki ayarları düzenleyin.
 
 == Changelog ==
+
+= 1.6.0 =
+* Elle yazı seçimi paneli: yazıları arayıp seçerek verdiğiniz sırayla listeleme.
+* Listenin dışında tutulacak yazıları seçme (hariç tutma).
+* Blok bir yazının içindeyken kendini listeden çıkarabilir.
+* Sayfalama kapatma ve baştan kaydırma (offset) ayarları.
+* Blok yönetimi için REST uçları ve beş MCP aracı (durum, listeleme, güncelleme, ekleme, kaldırma).
+* Yerel PHP test paketi eklendi.
 
 = 1.5.3 =
 * Satır sayısındaki gereksiz 6 üst sınırı kaldırıldı.
