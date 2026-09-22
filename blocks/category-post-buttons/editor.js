@@ -14,6 +14,7 @@
 	var Spinner = wp.components.Spinner;
 	var TextControl = wp.components.TextControl;
 	var ToggleControl = wp.components.ToggleControl;
+	var Button = wp.components.Button;
 	var useEffect = wp.element.useEffect;
 	var useState = wp.element.useState;
 	var useSelect = wp.data.useSelect;
@@ -255,6 +256,274 @@
 				[ attributes.instanceId, props.clientId ]
 			);
 
+			var manualIds = Array.isArray( attributes.manualIds ) ? attributes.manualIds : [];
+			var excludedIds = Array.isArray( attributes.excludeIds ) ? attributes.excludeIds : [];
+			var manualKey = manualIds.join( ',' );
+			var excludeKey = excludedIds.join( ',' );
+			var postSearchState = useState( '' );
+			var postSearch = postSearchState[ 0 ];
+			var setPostSearch = postSearchState[ 1 ];
+			var searchResults = useSelect(
+				function ( select ) {
+					if ( ! postSearch || postSearch.length < 2 ) {
+						return [];
+					}
+
+					return select( 'core' ).getEntityRecords( 'postType', 'post', {
+						search: postSearch,
+						per_page: 10,
+						status: 'publish',
+						orderby: 'date',
+					} );
+				},
+				[ postSearch ]
+			);
+			var pickedPosts = useSelect(
+				function ( select ) {
+					var ids = manualIds.concat( excludedIds );
+
+					if ( ! ids.length ) {
+						return [];
+					}
+
+					return select( 'core' ).getEntityRecords( 'postType', 'post', {
+						include: ids,
+						per_page: 100,
+						status: 'publish',
+					} );
+				},
+				[ manualKey, excludeKey ]
+			);
+			var pickedTitles = {};
+
+			( pickedPosts || [] ).forEach( function ( post ) {
+				pickedTitles[ post.id ] = stripTags( post.title && post.title.rendered ? post.title.rendered : '' );
+			} );
+
+			function stripTags( text ) {
+				return String( text || '' )
+					.replace( /<[^>]*>/g, '' )
+					.replace( /\s+/g, ' ' )
+					.trim();
+			}
+
+			function setManualIds( ids ) {
+				setAttributes( { manualIds: ids } );
+			}
+
+			function addManualId( id ) {
+				if ( manualIds.indexOf( id ) === -1 ) {
+					setManualIds( manualIds.concat( [ id ] ) );
+				}
+			}
+
+			function removeManualId( id ) {
+				setManualIds(
+					manualIds.filter( function ( item ) {
+						return item !== id;
+					} )
+				);
+			}
+
+			function moveManualId( index, delta ) {
+				var target = index + delta;
+
+				if ( target < 0 || target >= manualIds.length ) {
+					return;
+				}
+
+				var next = manualIds.slice();
+				var moved = next.splice( index, 1 )[ 0 ];
+
+				next.splice( target, 0, moved );
+				setManualIds( next );
+			}
+
+			function setExcludedIds( ids ) {
+				setAttributes( { excludeIds: ids } );
+			}
+
+			function renderPostPicker( options ) {
+				var ids = options.ids;
+
+				return el(
+					'div',
+					{ className: 'otobuton-editor-picker' },
+					el(
+						'span',
+						{ className: 'otobuton-editor-picker__label' },
+						options.label
+					),
+					options.help && el( 'p', { className: 'otobuton-editor-picker__help' }, options.help ),
+					el( SearchControl, {
+						label: __( 'Yazı ara', 'otomatik-butonlar-bloku' ),
+						value: postSearch,
+						placeholder: __( 'En az 2 harf yazın', 'otomatik-butonlar-bloku' ),
+						onChange: setPostSearch,
+					} ),
+					postSearch.length >= 2 &&
+						el(
+							'div',
+							{ className: 'otobuton-editor-picker__results' },
+							! searchResults
+								? el( Spinner )
+								: searchResults.length === 0
+								? el(
+										'p',
+										{ className: 'otobuton-editor-picker__empty' },
+										__( 'Sonuç bulunamadı.', 'otomatik-butonlar-bloku' )
+								  )
+								: searchResults.map( function ( post ) {
+										var already = ids.indexOf( post.id ) !== -1;
+
+										return el(
+											Button,
+											{
+												key: options.key + '-result-' + post.id,
+												variant: 'secondary',
+												size: 'small',
+												disabled: already,
+												onClick: function () {
+													options.onAdd( post.id );
+												},
+											},
+											stripTags( post.title && post.title.rendered ? post.title.rendered : '#' + post.id )
+										);
+								  } )
+						),
+					ids.length === 0
+						? el(
+								'p',
+								{ className: 'otobuton-editor-picker__empty' },
+								options.emptyText
+						  )
+						: el(
+								'ol',
+								{ className: 'otobuton-editor-picker__list' },
+								ids.map( function ( id, index ) {
+									return el(
+										'li',
+										{
+											key: options.key + '-item-' + id,
+											className: 'otobuton-editor-picker__item',
+										},
+										el(
+											'span',
+											{ className: 'otobuton-editor-picker__item-title' },
+											pickedTitles[ id ] || '#' + id
+										),
+										options.sortable &&
+											el(
+												Button,
+												{
+													size: 'small',
+													variant: 'tertiary',
+													disabled: 0 === index,
+													'aria-label': __( 'Yukarı taşı', 'otomatik-butonlar-bloku' ),
+													onClick: function () {
+														options.onMove( index, -1 );
+													},
+												},
+												'↑'
+											),
+										options.sortable &&
+											el(
+												Button,
+												{
+													size: 'small',
+													variant: 'tertiary',
+													disabled: index === ids.length - 1,
+													'aria-label': __( 'Aşağı taşı', 'otomatik-butonlar-bloku' ),
+													onClick: function () {
+														options.onMove( index, 1 );
+													},
+												},
+												'↓'
+											),
+										el(
+											Button,
+											{
+												size: 'small',
+												variant: 'tertiary',
+												isDestructive: true,
+												'aria-label': __( 'Listeden çıkar', 'otomatik-butonlar-bloku' ),
+												onClick: function () {
+													options.onRemove( id );
+												},
+											},
+											'✕'
+										)
+									);
+								} )
+						  )
+				);
+			}
+
+			function renderManualPanel() {
+				return el(
+					'div',
+					{ className: 'otobuton-editor-manual' },
+					el(
+						'p',
+						{ className: 'otobuton-editor-manual__intro' },
+						__(
+							'Elle yazı seçtiğinizde blok kategori yerine bu listeyi, verdiğiniz sırayla gösterir.',
+							'otomatik-butonlar-bloku'
+						)
+					),
+					renderPostPicker( {
+						key: 'manual',
+						label: __( 'Gösterilecek yazılar', 'otomatik-butonlar-bloku' ),
+						help: __(
+							'Sıralama oklarıyla yazıların listelenme sırasını değiştirebilirsiniz.',
+							'otomatik-butonlar-bloku'
+						),
+						emptyText: __( 'Henüz yazı seçilmedi; blok kategori ayarını kullanıyor.', 'otomatik-butonlar-bloku' ),
+						ids: manualIds,
+						sortable: true,
+						onAdd: addManualId,
+						onRemove: removeManualId,
+						onMove: moveManualId,
+					} ),
+					manualIds.length > 0 &&
+						el(
+							Button,
+							{
+								variant: 'link',
+								isDestructive: true,
+								onClick: function () {
+									setManualIds( [] );
+								},
+							},
+							__( 'Elle seçimi temizle', 'otomatik-butonlar-bloku' )
+						),
+					renderPostPicker( {
+						key: 'exclude',
+						label: __( 'Listeden çıkarılacak yazılar', 'otomatik-butonlar-bloku' ),
+						help: __(
+							'Seçilen yazılar kategori listesinde ve elle seçimde gösterilmez.',
+							'otomatik-butonlar-bloku'
+						),
+						emptyText: __( 'Hariç tutulan yazı yok.', 'otomatik-butonlar-bloku' ),
+						ids: excludedIds,
+						sortable: false,
+						onAdd: function ( id ) {
+							if ( excludedIds.indexOf( id ) === -1 ) {
+								setExcludedIds( excludedIds.concat( [ id ] ) );
+							}
+						},
+						onRemove: function ( id ) {
+							setExcludedIds(
+								excludedIds.filter( function ( item ) {
+									return item !== id;
+								} )
+							);
+						},
+						onMove: function () {},
+					} )
+				);
+			}
+
 			function renderSettings( className ) {
 				return el(
 					'div',
@@ -445,6 +714,55 @@
 						onChange: function ( value ) {
 							setAttributes( { showFeaturedBackground: !! value } );
 						},
+					} ),
+					el( ToggleControl, {
+						label: __( 'Sayfalama gösterilsin mi?', 'otomatik-butonlar-bloku' ),
+						help:
+							attributes.showPagination === false
+								? __(
+										'Kapalıyken blok, eşleşen tüm yazıları tek listede gösterir (en fazla 200 yazı) ve sayfalama bağlantıları çizilmez.',
+										'otomatik-butonlar-bloku'
+								  )
+								: __(
+										'Açıkken yazılar sayfalara bölünür ve numaralı sayfalama görünür.',
+										'otomatik-butonlar-bloku'
+								  ),
+						checked: ! ( attributes.showPagination === false ),
+						onChange: function ( value ) {
+							setAttributes( { showPagination: !! value } );
+						},
+					} ),
+					attributes.showPagination === false &&
+						el( NumberControl, {
+							label: __( 'Baştan atlanacak yazı sayısı', 'otomatik-butonlar-bloku' ),
+							help: __(
+								'Sayfalama kapalıyken en yeni yazılardan bu kadarı listeden atlanır. Sayfalama açıkken bu ayar uygulanmaz.',
+								'otomatik-butonlar-bloku'
+							),
+							value: Number.isFinite( Number( attributes.offset ) ) ? Number( attributes.offset ) : 0,
+							min: 0,
+							step: 1,
+							onChange: function ( value ) {
+								var offset = parseInt( value, 10 );
+
+								setAttributes( { offset: Number.isFinite( offset ) && offset > 0 ? offset : 0 } );
+							},
+						} ),
+					el( ToggleControl, {
+						label: __( 'Bulunduğu yazıyı listeden çıkar', 'otomatik-butonlar-bloku' ),
+						help: attributes.excludeCurrent
+							? __(
+									'Bu blok bir yazının içindeyken o yazının kendisi listede görünmez.',
+									'otomatik-butonlar-bloku'
+							  )
+							: __(
+									'Kapalıyken blok, bulunduğu yazıyı da listeleyebilir.',
+									'otomatik-butonlar-bloku'
+							  ),
+						checked: !! attributes.excludeCurrent,
+						onChange: function ( value ) {
+							setAttributes( { excludeCurrent: !! value } );
+						},
 					} )
 				);
 			}
@@ -462,6 +780,14 @@
 							initialOpen: true,
 						},
 						renderSettings( 'otobuton-editor-settings otobuton-editor-settings--panel' )
+					),
+					el(
+						PanelBody,
+						{
+							title: __( 'Elle yazı seçimi', 'otomatik-butonlar-bloku' ),
+							initialOpen: false,
+						},
+						renderManualPanel()
 					)
 				),
 				el(

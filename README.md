@@ -26,6 +26,54 @@ Eklenti sitesi: [bursa.mayahukuk.com](https://bursa.mayahukuk.com)
 - Tarihi gizleme ve bağlantıyı yeni sekmede açma seçenekleri.
 - Çok yazı olduğunda sağ ve sol oklarla önceki/sonraki sayfaya geçiş.
 - Mobil ekranlarda otomatik uyumlanan kutu düzeni.
+- **Elle yazı seçimi:** istediğiniz yazıları arayıp seçerek, verdiğiniz sırayla listeleme.
+- **Hariç tutma:** seçilen yazılar kategori listesinde ve elle seçimde gösterilmez.
+- **Bulunduğu yazıyı gizleme:** blok bir yazının içindeyken kendini listelemez.
+- **Sayfalamayı kapatma ve kaydırma:** sayfalama kapatıldığında tüm yazılar tek listede (en fazla 200) gösterilir; en yeni N yazı atlanabilir.
+- **Otomatik araçlar (MCP/REST):** blok örneklerini listeleyen, tek bir örneğin ayarını değiştiren, blok ekleyen ve kaldıran uçlar.
+
+## Otomatik araçlar (REST + MCP)
+
+Eklenti, bloğu WordPress dışından da yönetebilmek için iki katman sunar.
+
+### Abilities API (MCP araçları)
+
+WordPress Abilities API varsa aşağıdaki araçlar otomatik kaydolur ve bağlı MCP sunucusundan çağrılabilir:
+
+| Araç | İşlev |
+| --- | --- |
+| `otobuton/status` | Sürüm, blok kaydı, örnek sayısı, yazılabilir ayar adları |
+| `otobuton/list-instances` | Sayfa/yazılardaki blokları ayarlarıyla listeler |
+| `otobuton/update-instance` | Tek bir bloğun ayarını değiştirir (`dry_run` destekler) |
+| `otobuton/add-instance` | Sayfa/yazı başına veya sonuna blok ekler |
+| `otobuton/remove-instance` | Bloğu kimliğine göre kaldırır |
+
+### REST uçları
+
+Tüm araçlar `otobuton/v1` altındaki uçlara dayanır (aynı yetki ve doğrulama kuralları):
+
+- `GET  /wp-json/otobuton/v1/status`
+- `GET  /wp-json/otobuton/v1/instances?post_id=2648`
+- `POST /wp-json/otobuton/v1/instances/update`
+- `POST /wp-json/otobuton/v1/instances/add`
+- `POST /wp-json/otobuton/v1/instances/remove`
+
+Yazma işlemleri `edit_post` yetkisi ister, değişiklik blok ayrıştırıcısıyla yapılır (içeriğin geri kalanı bozulmaz) ve kayıt sonrası içerik geri okunup doğrulanır. `instanceId` dışarıdan değiştirilemez.
+
+## Testler
+
+Yerel PHP CLI ile çalışan üç doğrulama dosyası vardır (WordPress kurulumu gerekmez; blok ayrıştırma için WordPress 6.8 çekirdek ayrıştırıcısı kullanılır):
+
+```bash
+for t in tests/verify-*.php; do php "$t" | tail -3; done
+```
+
+Son durum: **156 passed / 0 failed** (attributes 48, block-store 47, abilities 61).
+
+## Sürüm geçmişi
+
+- **1.6.0** — Elle yazı seçimi ve hariç tutma, bulunduğu yazıyı gizleme, sayfalamayı kapatma, kaydırma (offset); blok yönetimi için REST uçları ve beş MCP aracı; yerel test paketi.
+- **1.5.3** — Sayfalama ve blok ayarları iyileştirmeleri.
 
 ## Gereksinimler
 
@@ -89,7 +137,7 @@ otomatik-butonlar-bloku/
 
 ## Sürüm
 
-Güncel sürüm: `1.5.3`
+Güncel sürüm: `1.6.0`
 
 ## Lisans
 
